@@ -13,9 +13,6 @@ guoke_mysql = guoke_mysql("public_number");
 data = mysql.sqlquery('SELECT * FROM `mp_info` where is_py=0 ORDER BY RAND() LIMIT 10')
 
 for item in data:
-    # wechat.get_yesterday_time()
-    # exit()
-
     gk_data = guoke_mysql.tables('public_number', 'gk').where({'wx_code': item['wx_hao']}).find(1)
 
     # 删除没有对应的公众号
@@ -106,3 +103,6 @@ for item in data:
 
     for ii in gkIstData:
         guoke_mysql.tables('article', 'gk').add(ii)
+
+    #把采集回来的数据进行统计
+    wechat.gzh_wz_calculate(gk_data=gk_data,dicts=gkIstData)

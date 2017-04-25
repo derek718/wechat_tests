@@ -5,7 +5,10 @@ from lxml import etree
 from lxml import html as hl
 import string
 from .db import mysql
+from .guokedb import mysql as guokeMysql
 import re
+import time
+import math
 
 class WechatSogouApi(WechatSogouBasic):
     def __init__(self, **kwargs):
@@ -26,7 +29,7 @@ class WechatSogouApi(WechatSogouBasic):
 
     def _get_wechat_text(self, wechatid):
         url = 'http://weixin.sogou.com/weixin?type=1&s_from=input&query=' + wechatid + '&ie=utf8&_sug_=n&_sug_type_='
-        # url = 'http://weixin.sogou.com/weixin?type=1&s_from=input&query=ylbgbl888&ie=utf8&_sug_=n&_sug_type_='
+        # url = 'http://weixin.sogou.com/weixin?type=1&s_from=input&query=lizhilinzhongyan&ie=utf8&_sug_=n&_sug_type_='
 	print(url)
         text = self._get(url)
 
@@ -251,3 +254,84 @@ class WechatSogouApi(WechatSogouBasic):
                 continue
             items.append(item)
         return items
+
+    def gzh_wz_calculate(self, **kwargs):
+
+        gk_data = kwargs.get('gk_data',None)
+        dicts = kwargs.get('dicts',None)
+
+        if gk_data == None or dicts== None:
+            raise (u'微信id不能为空')
+
+        instData={
+            'release':0,#发布 （1/10）,
+            'total_reading':0,#阅读总数
+            'total_head':0,#头条阅读总数
+            'max_head':0,#最高阅读数
+            'total_zan':0,#总点赞数
+            'average':0,#平均数
+            'category_id':0,
+            'public_code':'',
+            'public_name':'',
+            'logo':'',
+            'addtime':int(time.time()),
+            'gk_index' :0
+        }
+
+        #记录每一篇文章阅读数
+        total_wz_hit = list()
+
+        release_chishu = 0  # 发布次数
+        release_total = len(dicts)  # 发布文章总数
+        for i in dicts:
+            #算出一天发布几次文章
+            if int(i['is_head']) == 1:
+                release_chishu+= 1
+                instData['total_head'] += i['hit']
+            else:
+                release_chishu =1
+
+            instData['total_reading'] += int(i['hit'])
+            total_wz_hit.append(int(i['hit']))
+
+            #总点赞数
+            instData['total_zan'] += int(i['zan'])
+
+        instData['public_code'] = gk_data['wx_code']
+        instData['public_name'] = gk_data['name']
+        instData['logo'] = gk_data['logo']
+        instData['category_id'] = int(gk_data['category_id'])
+        instData['release'] = str(release_chishu) + '/' + str(release_total)
+        instData['average'] = int(int(instData['total_reading'])  / int(release_total))
+        instData['max_head'] = max(total_wz_hit)
+        instData['gk_index'] = self.gk_zhishu(instData)
+
+
+        gk_mysql = guokeMysql('daydata', 'gk')
+        gk_mysql.tables('daydata', 'gk').add(instData)
+
+
+    def gk_zhishu(self,data,n=1):
+        wrr = 0.75
+        wrm = 0.05
+        wra = 0.1
+        wrh = 0.05
+        wz = 0.05
+
+        release = str(data['release']).split('/')
+
+        R = (int(data['total_reading']) + 1) / (n * (int(release[1]) * 100000) + 1) *1000
+
+        RM = ((int(data['max_head']) + 1) / 100001) *1000;
+
+        #平均阅读
+        RA = ((math.floor(data['total_reading'] / int(release[1])) + 1) / 100001) *1000;
+
+        #头条阅读
+        RH = ((100001 + 1) / (n * 100001)) *1000;
+
+        #总点赞
+        Z = ((int(data['total_zan']) + 1) / (n * (int(release[1]) * 10000) + 1)) *1000;
+
+        NRI = wrr *R + wrm *RM + wra *RA + wrh *RH + wz *Z;
+        return round(NRI,2);
