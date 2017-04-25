@@ -259,9 +259,10 @@ class WechatSogouApi(WechatSogouBasic):
 
         gk_data = kwargs.get('gk_data',None)
         dicts = kwargs.get('dicts',None)
-        print (dicts)
-        exit()
-        if gk_data == None or dicts== None:
+        if not dicts:
+            raise (u'微信id不能为空')
+
+        if gk_data == None or dicts== None :
             raise (u'微信id不能为空')
 
         instData={
