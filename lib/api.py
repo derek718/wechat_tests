@@ -294,7 +294,7 @@ class WechatSogouApi(WechatSogouBasic):
             instData['total_reading'] += int(i['hit'])
             total_wz_hit.append(int(i['hit']))
 
-            if release_total < 1:
+            if release_total < 1 or instData['total_reading'] < 0:
                 raise (u'没有数据')
             #总点赞数
             instData['total_zan'] += int(i['zan'])
