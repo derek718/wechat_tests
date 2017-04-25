@@ -255,9 +255,9 @@ class WechatSogouApi(WechatSogouBasic):
             items.append(item)
         return items
 
-    def gzh_wz_calculate(self, datas, **kwargs):
+    def gzh_wz_calculate(self, datas, gk_data):
 
-        gk_data = kwargs.get('gk_data',None)
+        gk_data = gk_data
         dicts = datas
 
         print (type(dicts))
