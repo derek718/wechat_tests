@@ -259,7 +259,7 @@ class WechatSogouApi(WechatSogouBasic):
 
         gk_data = kwargs.get('gk_data',None)
         dicts = kwargs.get('dicts',None)
-        if dicts == False or dicts.has_key('is_head') == False:
+        if dicts == False or len(dicts) <= 0:
             raise (u'微信id不能为空False')
 
 
