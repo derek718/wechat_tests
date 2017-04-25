@@ -104,5 +104,8 @@ for item in data:
     for ii in gkIstData:
         guoke_mysql.tables('article', 'gk').add(ii)
 
+    print (gkIstData)
+    exit()
+    
     #把采集回来的数据进行统计
-    wechat.gzh_wz_calculate(gk_data=gk_data,dicts=gkIstData)
+    wechat.gzh_wz_calculate(gkIstData, gk_data)
